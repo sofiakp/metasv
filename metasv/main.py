@@ -9,6 +9,7 @@ from pindel_reader import PindelReader
 from breakdancer_reader import BreakDancerReader
 from breakseq_reader import BreakSeqReader
 from cnvnator_reader import CNVnatorReader
+from bedpe_reader import BedpeReader
 from generate_sv_intervals import parallel_generate_sc_intervals
 from run_spades import run_spades_parallel
 from age import run_age_parallel
@@ -33,8 +34,8 @@ def run_metasv(args):
     logger.info("Running MetaSV %s" % __version__)
     logger.info("Command-line %s" % (" ".join(sys.argv)))
     logger.info("Arguments are " + str(args))
-    
-    
+
+
     # Check if there is work to do
     if not (args.pindel_vcf + args.breakdancer_vcf + args.breakseq_vcf + args.cnvnator_vcf +
             args.pindel_native + args.breakdancer_native + args.breakseq_native + args.cnvnator_native +
@@ -82,7 +83,8 @@ def run_metasv(args):
     native_name_list = [("CNVnator", args.cnvnator_native, CNVnatorReader),
                         ("Pindel", args.pindel_native, PindelReader),
                         ("BreakSeq", args.breakseq_native, BreakSeqReader),
-                        ("BreakDancer", args.breakdancer_native, BreakDancerReader)]
+                        ("BreakDancer", args.breakdancer_native, BreakDancerReader),
+                        ("Bedpe", args.bedpe, BedpeReader)]
 
     tools = []
     intervals = {}
@@ -113,7 +115,7 @@ def run_metasv(args):
                     #Filter BreakDancer artifact INVs with size < readlength+4*isize_sd
                     continue
                 if not interval_overlaps_interval_list(interval, gap_intervals) and interval.chrom in contig_whitelist:
-                    
+
                     # Check length
                     if interval.length < args.minsvlen and interval.sv_type not in  ["ITX", "CTX"]:
                         continue
@@ -123,7 +125,7 @@ def run_metasv(args):
                         interval.wiggle = max(args.inswiggle if interval.sv_type == "INS" else 0, args.wiggle)
                     else:
                         interval.wiggle = TX_WIGGLE
-                    
+
                     intervals[toolname][interval.sv_type].append(interval)
         sv_types |= set(intervals[toolname].keys())
 
@@ -281,11 +283,11 @@ def run_metasv(args):
                                                           min_avg_base_qual=args.min_avg_base_qual,
                                                           min_soft_clip=args.min_soft_clip,
                                                           max_nm=args.max_nm, min_matches=args.min_matches,
-                                                          isize_mean=args.isize_mean, isize_sd=args.isize_sd,                                                        
+                                                          isize_mean=args.isize_mean, isize_sd=args.isize_sd,
                                                           svs_to_softclip=args.svs_to_softclip,
                                                           overlap_ratio=args.overlap_ratio,
                                                           mean_read_length=args.mean_read_length,
-                                                          mean_read_coverage=args.mean_read_coverage, 
+                                                          mean_read_coverage=args.mean_read_coverage,
                                                           min_ins_cov_frac=args.min_ins_cov_frac,
                                                           max_ins_cov_frac=args.max_ins_cov_frac,
                                                           assembly_max_tools=args.assembly_max_tools,
